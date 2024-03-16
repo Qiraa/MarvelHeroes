@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -23,30 +22,24 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.marvelsuperheroes.R
+import com.example.marvelsuperheroes.ui.DESCRIPTION
+import com.example.marvelsuperheroes.ui.IMAGE_URL
+import com.example.marvelsuperheroes.ui.NAME
+import com.example.marvelsuperheroes.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
-    val superheroes = listOf(
-        Superhero(
-            imageUrl = "https://i.pinimg.com/736x/24/54/00/245400a91205ce47b880302a5729d0bd.jpg",
-            name = "Deadpool",
-            description = "",
-        ),
-        Superhero(
-            imageUrl = "https://i.pinimg.com/originals/0e/a9/b4/0ea9b41396ca6ebdeba4848c31f6e030.jpg",
-            name = "Iron Man",
-            description = "",
-        ),
-        Superhero(
-            imageUrl = "https://i.insider.com/51eea7f46bb3f7326e00001c?width=1200",
-            name = "Spider Man",
-            description = "",
-        )
-    )
-
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+) {
+    val viewModel = viewModel<MainViewModel>()
     Column(
         modifier = modifier
             .paint(
@@ -68,7 +61,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.headlineLarge,
         )
         val state = rememberLazyListState()
-
+        val items = viewModel.getMainItems()
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -76,13 +69,30 @@ fun MainScreen(modifier: Modifier = Modifier) {
             state = state,
             flingBehavior = rememberSnapFlingBehavior(lazyListState = state),
         ) {
-            items(superheroes) { hero ->
+            items(items) { hero ->
+                val name = stringResource(id = hero.nameId)
+                val description = stringResource(id = hero.descriptionId)
+
                 MainCard(
                     imageUrl = hero.imageUrl,
-                    name = hero.name,
-                    modifier = Modifier.fillParentMaxSize()
+                    name = name,
+                    modifier = Modifier.fillParentMaxSize(),
+                    onClick = {
+                        navController.navigate(
+                            "hero?" +
+                                "$IMAGE_URL=${hero.imageUrl}&" +
+                                "$NAME=$name&" +
+                                "$DESCRIPTION=$description"
+                        )
+                    },
                 )
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun MainScreenPreview() {
+    MainScreen(navController = rememberNavController())
 }
