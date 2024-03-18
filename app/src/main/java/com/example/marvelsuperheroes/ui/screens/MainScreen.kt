@@ -28,10 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.marvelsuperheroes.R
-import com.example.marvelsuperheroes.ui.DESCRIPTION
-import com.example.marvelsuperheroes.ui.IMAGE_URL
-import com.example.marvelsuperheroes.ui.NAME
-import com.example.marvelsuperheroes.ui.viewmodel.MainViewModel
+import com.example.marvelsuperheroes.presentation.MainViewModel
+import com.example.marvelsuperheroes.ui.HeroScreen
+import com.example.marvelsuperheroes.ui.components.MainCard
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -40,6 +39,8 @@ fun MainScreen(
     navController: NavController,
 ) {
     val viewModel = viewModel<MainViewModel>()
+    val lazyListState = rememberLazyListState()
+    val items = viewModel.getMainItems()
     Column(
         modifier = modifier
             .paint(
@@ -60,35 +61,30 @@ fun MainScreen(
             text = stringResource(id = R.string.choose_hero),
             style = MaterialTheme.typography.headlineLarge,
         )
-        val state = rememberLazyListState()
-        val items = viewModel.getMainItems()
+
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(24.dp),
-            state = state,
-            flingBehavior = rememberSnapFlingBehavior(lazyListState = state),
+            state = lazyListState,
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
         ) {
             items(items) { hero ->
-                val name = stringResource(id = hero.nameId)
-                val description = stringResource(id = hero.descriptionId)
-
                 MainCard(
                     imageUrl = hero.imageUrl,
-                    name = name,
+                    name = stringResource(id = hero.nameId),
                     modifier = Modifier.fillParentMaxSize(),
                     onClick = {
-                        navController.navigate(
-                            "hero?" +
-                                "$IMAGE_URL=${hero.imageUrl}&" +
-                                "$NAME=$name&" +
-                                "$DESCRIPTION=$description"
-                        )
+                        navController.navigateToHeroScreen(hero.id)
                     },
                 )
             }
         }
     }
+}
+
+private fun NavController.navigateToHeroScreen(id: Int) {
+    navigate(HeroScreen.withHeroId(id))
 }
 
 @Preview

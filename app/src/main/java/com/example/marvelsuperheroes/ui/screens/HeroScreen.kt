@@ -13,16 +13,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.example.marvelsuperheroes.R
+import com.example.marvelsuperheroes.presentation.HeroViewModel
 
 @Composable
 fun HeroScreen(
     modifier: Modifier = Modifier,
+    heroId: Int,
+) {
+    val viewModel = viewModel<HeroViewModel>()
+    val hero = viewModel.getHeroById(heroId)
+
+    if (hero == null) {
+        Box(modifier = modifier.fillMaxSize()) {
+            Text(stringResource(id = R.string.hero_not_found))
+        }
+    } else {
+        HeroScreenContent(
+            imageUrl = hero.imageUrl, 
+            name = stringResource(id = hero.nameId), 
+            description = stringResource(id = hero.descriptionId),
+        )
+    }
+}
+
+@Composable
+fun HeroScreenContent(
+    modifier: Modifier = Modifier,
     imageUrl: String,
     name: String,
-    description: String
+    description: String,
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
         Image(
@@ -50,7 +75,7 @@ fun HeroScreen(
 @Preview
 @Composable
 fun HeroScreenPreview() {
-    HeroScreen(
+    HeroScreenContent(
         imageUrl = "https://i.pinimg.com/originals/0e/a9/b4/0ea9b41396ca6ebdeba4848c31f6e030.jpg",
         name = "Hero",
         description = "Cool hero!"

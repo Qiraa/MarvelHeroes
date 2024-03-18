@@ -8,4 +8,5 @@
     <string name="deadpoolDescription">Please don’t make the super suit green...or animated!</string>
     <string name="ironManDescription">I AM IRON MAN</string>
     <string name="spiderManDescription">In iron suit</string>
+    <string name="hero_not_found">Hero has not been found</string>
 </resources>
