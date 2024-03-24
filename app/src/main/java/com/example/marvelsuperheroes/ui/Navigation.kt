@@ -26,7 +26,7 @@ object HeroScreen {
         return "hero?$HERO_ID={$HERO_ID}"
     }
 
-    fun withHeroId(id: Int): String {
+    fun withHeroId(id: String): String {
         return "hero?$HERO_ID=$id"
     }
 }
@@ -45,11 +45,11 @@ fun SetupNavigation() {
         composable(
             route = HeroScreen.route(),
             arguments = listOf(
-                navArgument(HERO_ID) { type = NavType.IntType },
+                navArgument(HERO_ID) { type = NavType.StringType },
             )
         ) { backStackEntry ->
             HeroScreen(
-                heroId = backStackEntry.arguments?.getInt(HERO_ID)
+                heroId = backStackEntry.arguments?.getString(HERO_ID)
                     ?: error("No value passed for $HERO_ID"),
             )
         }

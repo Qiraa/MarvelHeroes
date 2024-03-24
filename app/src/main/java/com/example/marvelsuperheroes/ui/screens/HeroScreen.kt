@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -19,26 +22,36 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.marvelsuperheroes.R
+import com.example.marvelsuperheroes.presentation.HeroState
 import com.example.marvelsuperheroes.presentation.HeroViewModel
+import com.example.marvelsuperheroes.presentation.HeroViewModelFactory
 
 @Composable
 fun HeroScreen(
     modifier: Modifier = Modifier,
-    heroId: Int,
+    heroId: String,
 ) {
-    val viewModel = viewModel<HeroViewModel>()
-    val hero = viewModel.getHeroById(heroId)
-
-    if (hero == null) {
-        Box(modifier = modifier.fillMaxSize()) {
-            Text(stringResource(id = R.string.hero_not_found))
+    val viewModel = viewModel<HeroViewModel>(factory = HeroViewModelFactory(heroId))
+    val state by viewModel.stateFlow.collectAsState()
+    when (val currentState = state) {
+        is HeroState.Loading -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
-    } else {
-        HeroScreenContent(
-            imageUrl = hero.imageUrl, 
-            name = stringResource(id = hero.nameId), 
-            description = stringResource(id = hero.descriptionId),
-        )
+        is HeroState.Error -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = stringResource(id = R.string.error))
+            }
+        }
+        is HeroState.Success -> {
+            HeroScreenContent(
+                modifier = modifier,
+                imageUrl = currentState.superhero.imageUrl,
+                name = currentState.superhero.name,
+                description = currentState.superhero.description,
+            )
+        }
     }
 }
 

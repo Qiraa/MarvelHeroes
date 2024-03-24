@@ -4,8 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -13,9 +15,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -28,19 +33,48 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.marvelsuperheroes.R
+import com.example.marvelsuperheroes.data.Superhero
+import com.example.marvelsuperheroes.presentation.MainState
 import com.example.marvelsuperheroes.presentation.MainViewModel
 import com.example.marvelsuperheroes.ui.HeroScreen
 import com.example.marvelsuperheroes.ui.components.MainCard
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
 ) {
     val viewModel = viewModel<MainViewModel>()
+    val state by viewModel.stateFlow.collectAsState()
+    when (val currentState = state) {
+        is MainState.Loading -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+        is MainState.Error -> {
+            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = stringResource(id = R.string.error))
+            }
+        }
+        is MainState.Success -> {
+            MainContent(
+                modifier = modifier,
+                navController = navController,
+                superheroes = currentState.superheroes,
+            )
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+private fun MainContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    superheroes: List<Superhero>,
+) {
     val lazyListState = rememberLazyListState()
-    val items = viewModel.getMainItems()
     Column(
         modifier = modifier
             .paint(
@@ -69,10 +103,10 @@ fun MainScreen(
             state = lazyListState,
             flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
         ) {
-            items(items) { hero ->
+            items(superheroes) { hero ->
                 MainCard(
                     imageUrl = hero.imageUrl,
-                    name = stringResource(id = hero.nameId),
+                    name = hero.name,
                     modifier = Modifier.fillParentMaxSize(),
                     onClick = {
                         navController.navigateToHeroScreen(hero.id)
@@ -83,7 +117,7 @@ fun MainScreen(
     }
 }
 
-private fun NavController.navigateToHeroScreen(id: Int) {
+private fun NavController.navigateToHeroScreen(id: String) {
     navigate(HeroScreen.withHeroId(id))
 }
 

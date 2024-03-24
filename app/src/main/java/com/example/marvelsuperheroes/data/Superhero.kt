@@ -1,8 +1,8 @@
 package com.example.marvelsuperheroes.data
 
 data class Superhero(
-    val id: Int,
+    val id: String,
     val imageUrl: String,
-    val nameId: Int,
-    val descriptionId: Int,
+    val name: String,
+    val description: String,
 )
