@@ -1,7 +1,10 @@
 package com.example.marvelsuperheroes.data
 
+import com.example.marvelsuperheroes.App
 import com.example.marvelsuperheroes.data.api.CharactersResponse
 import com.example.marvelsuperheroes.data.api.MarvelApi
+import com.example.marvelsuperheroes.data.db.SuperheroDao
+import com.example.marvelsuperheroes.data.db.SuperheroEntity
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -28,7 +31,31 @@ class HeroesRepositoryImpl : HeroesRepository {
 
     private val api: MarvelApi = retrofit.create()
 
+    private val dao: SuperheroDao = App.database.getSuperheroesDao()
+
     override suspend fun getAllHeroes(): List<Superhero> {
+        val cacheData = dao.getAll()
+        if (cacheData.isEmpty()) {
+            val networkData = getAllHeroesFromNetwork()
+            dao.insert(networkData.map { hero -> mapToSuperheroEntity(hero) })
+            return networkData
+        }
+
+        return cacheData.map { heroEntity -> mapToSuperhero(heroEntity) }
+    }
+
+    override suspend fun getHeroById(id: String): Superhero {
+        val cacheData = dao.getById(id)
+        if (cacheData == null) {
+            val networkData = getHeroByIdFromNetwork(id)
+            dao.insert(mapToSuperheroEntity(networkData))
+            return networkData
+        }
+
+        return mapToSuperhero(cacheData)
+    }
+
+    private suspend fun getAllHeroesFromNetwork(): List<Superhero> {
         val timestamp = getCurrentTimestamp()
         val charactersResponse = api.getSuperheroes(
             apiKey = PUBLIC_API_KEY,
@@ -38,7 +65,7 @@ class HeroesRepositoryImpl : HeroesRepository {
         return mapToSuperheroes(charactersResponse)
     }
 
-    override suspend fun getHeroById(id: String): Superhero {
+    private suspend fun getHeroByIdFromNetwork(id: String): Superhero {
         val timestamp = getCurrentTimestamp()
         val charactersResponse = api.getSuperhero(
             heroId = id,
@@ -64,6 +91,24 @@ class HeroesRepositoryImpl : HeroesRepository {
                 description = hero.description,
             )
         }
+    }
+
+    private fun mapToSuperhero(entity: SuperheroEntity): Superhero {
+        return Superhero(
+            id = entity.id,
+            imageUrl = entity.imageUrl,
+            name = entity.name,
+            description = entity.description,
+        )
+    }
+
+    private fun mapToSuperheroEntity(superhero: Superhero): SuperheroEntity {
+        return SuperheroEntity(
+            id = superhero.id,
+            name = superhero.name,
+            description = superhero.description,
+            imageUrl = superhero.imageUrl,
+        )
     }
 
     private fun getHash(timestamp: Long): String {
