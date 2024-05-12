@@ -1,7 +1,7 @@
 package com.example.marvelsuperheroes.data
 
 interface HeroesRepository {
-    fun getAllHeroes(): List<Superhero>
+    suspend fun getAllHeroes(): List<Superhero>
 
-    fun getHeroById(id: Int): Superhero?
+    suspend fun getHeroById(id: String): Superhero
 }
