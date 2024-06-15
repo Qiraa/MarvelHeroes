@@ -19,19 +19,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.marvelsuperheroes.R
 import com.example.marvelsuperheroes.presentation.HeroState
 import com.example.marvelsuperheroes.presentation.HeroViewModel
-import com.example.marvelsuperheroes.presentation.HeroViewModelFactory
 
 @Composable
 fun HeroScreen(
     modifier: Modifier = Modifier,
     heroId: String,
 ) {
-    val viewModel = viewModel<HeroViewModel>(factory = HeroViewModelFactory(heroId))
+    val viewModel = hiltViewModel<HeroViewModel, HeroViewModel.Factory> { factory ->
+        factory.create(heroId)
+    }
     val state by viewModel.stateFlow.collectAsState()
     when (val currentState = state) {
         is HeroState.Loading -> {
