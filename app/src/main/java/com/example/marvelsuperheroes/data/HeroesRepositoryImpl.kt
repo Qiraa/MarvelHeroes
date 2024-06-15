@@ -2,11 +2,8 @@ package com.example.marvelsuperheroes.data
 
 import com.example.marvelsuperheroes.data.api.CharactersResponse
 import com.example.marvelsuperheroes.data.api.MarvelApi
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.create
+import com.example.marvelsuperheroes.data.db.SuperheroDao
+import com.example.marvelsuperheroes.data.db.SuperheroEntity
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -14,21 +11,34 @@ private const val PUBLIC_API_KEY = "ffcbb0906e8b30f93686712b3a023956"
 private const val PRIVATE_API_KEY = "e138cb0628f33887dc7c6968e4c08f8d4f2867e1"
 private const val MILLIS_IN_SECOND = 1000L
 
-class HeroesRepositoryImpl : HeroesRepository {
-
-    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-        .build()
-
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .client(okHttpClient)
-        .baseUrl("https://gateway.marvel.com/v1/public/")
-        .addConverterFactory(MoshiConverterFactory.create())
-        .build()
-
-    private val api: MarvelApi = retrofit.create()
+class HeroesRepositoryImpl(
+    private val api: MarvelApi,
+    private val dao: SuperheroDao,
+) : HeroesRepository {
 
     override suspend fun getAllHeroes(): List<Superhero> {
+        val cacheData = dao.getAll()
+        if (cacheData.isEmpty()) {
+            val networkData = getAllHeroesFromNetwork()
+            dao.insert(networkData.map { hero -> mapToSuperheroEntity(hero) })
+            return networkData
+        }
+
+        return cacheData.map { heroEntity -> mapToSuperhero(heroEntity) }
+    }
+
+    override suspend fun getHeroById(id: String): Superhero {
+        val cacheData = dao.getById(id)
+        if (cacheData == null) {
+            val networkData = getHeroByIdFromNetwork(id)
+            dao.insert(mapToSuperheroEntity(networkData))
+            return networkData
+        }
+
+        return mapToSuperhero(cacheData)
+    }
+
+    private suspend fun getAllHeroesFromNetwork(): List<Superhero> {
         val timestamp = getCurrentTimestamp()
         val charactersResponse = api.getSuperheroes(
             apiKey = PUBLIC_API_KEY,
@@ -38,7 +48,7 @@ class HeroesRepositoryImpl : HeroesRepository {
         return mapToSuperheroes(charactersResponse)
     }
 
-    override suspend fun getHeroById(id: String): Superhero {
+    private suspend fun getHeroByIdFromNetwork(id: String): Superhero {
         val timestamp = getCurrentTimestamp()
         val charactersResponse = api.getSuperhero(
             heroId = id,
@@ -64,6 +74,24 @@ class HeroesRepositoryImpl : HeroesRepository {
                 description = hero.description,
             )
         }
+    }
+
+    private fun mapToSuperhero(entity: SuperheroEntity): Superhero {
+        return Superhero(
+            id = entity.id,
+            imageUrl = entity.imageUrl,
+            name = entity.name,
+            description = entity.description,
+        )
+    }
+
+    private fun mapToSuperheroEntity(superhero: Superhero): SuperheroEntity {
+        return SuperheroEntity(
+            id = superhero.id,
+            name = superhero.name,
+            description = superhero.description,
+            imageUrl = superhero.imageUrl,
+        )
     }
 
     private fun getHash(timestamp: Long): String {
