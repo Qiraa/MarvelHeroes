@@ -10,4 +10,8 @@
     <string name="spiderManDescription">In iron suit</string>
     <string name="hero_not_found">Hero has not been found</string>
     <string name="error">Something went wrong</string>
+    <string name="default_notification_channel_id">main_channel</string>
+    <string name="default_notification_channel_name">Main channel</string>
+    <string name="default_notification_channel_description">Main channel for push notifications in the app</string>
+    <string name="push_notifications_unavailable">Push notifications won\'t be shown</string>
 </resources>
