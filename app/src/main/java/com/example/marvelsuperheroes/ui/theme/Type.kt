@@ -12,13 +12,11 @@ val Typography = Typography(
         fontSize = 32.sp,
         lineHeight = 40.sp,
         fontWeight = FontWeight.Bold,
-        color = Color.White,
     ),
     headlineMedium = TextStyle(
         fontSize = 24.sp,
         lineHeight = 24.sp,
         fontWeight = FontWeight.Bold,
-        color = Color.White,
     )
 )
 

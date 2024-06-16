@@ -1,5 +1,6 @@
 package com.example.marvelsuperheroes.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -7,11 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,12 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.marvelsuperheroes.R
@@ -69,13 +74,37 @@ fun MainScreen(
 }
 
 @Composable
-@OptIn(ExperimentalFoundationApi::class)
 private fun MainContent(
     modifier: Modifier = Modifier,
     navController: NavController,
     superheroes: List<Superhero>,
 ) {
     val lazyListState = rememberLazyListState()
+    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        LandscapeMainContent(
+            modifier = modifier,
+            navController = navController,
+            superheroes = superheroes,
+            lazyListState = lazyListState,
+        )
+    } else {
+        PortraitMainContent(
+            modifier = modifier,
+            navController = navController,
+            superheroes = superheroes,
+            lazyListState = lazyListState,
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+private fun PortraitMainContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    superheroes: List<Superhero>,
+    lazyListState: LazyListState,
+) {
     Column(
         modifier = modifier
             .paint(
@@ -94,13 +123,72 @@ private fun MainContent(
         )
         Text(
             text = stringResource(id = R.string.choose_hero),
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.headlineLarge
+                .copy(color = MaterialTheme.colorScheme.onBackground),
         )
 
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(24.dp),
+            state = lazyListState,
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
+        ) {
+            items(superheroes) { hero ->
+                MainCard(
+                    imageUrl = hero.imageUrl,
+                    name = hero.name,
+                    modifier = Modifier.fillParentMaxSize(),
+                    onClick = {
+                        navController.navigateToHeroScreen(hero.id)
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+fun LandscapeMainContent(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    superheroes: List<Superhero>,
+    lazyListState: LazyListState,
+) {
+    Row(
+        modifier = modifier
+            .paint(
+                painter = painterResource(id = R.drawable.main_background),
+                contentScale = ContentScale.Crop,
+            )
+            .systemBarsPadding(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(top = 16.dp, bottom = 32.dp)
+                .weight(1f)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = stringResource(id = R.string.marvel_studios),
+                modifier = Modifier.width(148.dp),
+            )
+            Text(
+                text = stringResource(id = R.string.choose_hero),
+                style = MaterialTheme.typography.headlineLarge
+                    .copy(color = MaterialTheme.colorScheme.onBackground),
+            )
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             state = lazyListState,
             flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState),
         ) {
