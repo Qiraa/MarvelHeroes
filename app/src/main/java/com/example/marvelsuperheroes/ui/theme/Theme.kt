@@ -24,6 +24,7 @@ fun MarvelSuperheroesTheme(
 
     MaterialTheme(
         typography = Typography,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         content = content
     )
 }

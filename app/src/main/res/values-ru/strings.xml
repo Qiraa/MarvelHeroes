@@ -1,0 +1,9 @@
+<resources>
+    <string name="choose_hero">Выбери своего героя</string>
+    <string name="hero_not_found">Герой не найден</string>
+    <string name="error">Что-то пошло не так</string>
+    <string name="default_notification_channel_id">main_channel</string>
+    <string name="default_notification_channel_name">Основной канал</string>
+    <string name="default_notification_channel_description">Основной канал для пуш-уведомлений в приложении</string>
+    <string name="push_notifications_unavailable">Пуш-уведомления не будут показаны</string>
+</resources>
